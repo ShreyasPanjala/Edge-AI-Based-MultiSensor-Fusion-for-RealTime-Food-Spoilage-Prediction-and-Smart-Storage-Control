@@ -1,0 +1,22 @@
+Sweep Type,Mean Separation (Delta ADC),Theoretical Overlap (%),Noise Scale,Drift Scale,Single-Threshold Acc (%),Random Forest Acc (%),Stacking Hybrid Acc (%)
+Class Overlap,500,0.18,1.0,1.0,100.0,99.93,99.87
+Class Overlap,400,1.24,1.0,1.0,99.47,99.47,99.27
+Class Overlap,300,6.08,1.0,1.0,94.07,93.87,93.87
+Class Overlap,200,21.13,1.0,1.0,88.8,88.87,88.8
+Class Overlap,150,34.85,1.0,1.0,79.87,79.87,79.87
+Class Overlap,100,53.2,1.0,1.0,73.2,73.33,73.4
+Class Overlap,50,75.47,1.0,1.0,73.93,73.6,73.8
+Class Overlap,20,90.05,1.0,1.0,58.2,57.8,57.8
+Class Overlap,0,100.0,1.0,1.0,51.33,52.4,51.33
+Noise Scale,516,0.75,0.5,1.0,100.0,100.0,100.0
+Noise Scale,516,1.5,1.0,1.0,100.0,100.0,100.0
+Noise Scale,516,2.25,1.5,1.0,97.33,97.2,97.27
+Noise Scale,516,3.0,2.0,1.0,92.33,92.27,92.47
+Noise Scale,516,4.5,3.0,1.0,81.47,81.6,81.53
+Noise Scale,516,6.0,4.0,1.0,77.87,77.93,78.07
+Sensor Drift,516,0.5,1.0,0.0,99.87,99.93,99.93
+Sensor Drift,516,0.5,1.0,1.0,99.47,99.67,99.67
+Sensor Drift,516,0.5,1.0,2.0,99.67,99.6,99.6
+Sensor Drift,516,0.5,1.0,5.0,99.8,99.73,99.73
+Sensor Drift,516,0.5,1.0,10.0,99.47,99.27,99.67
+Sensor Drift,516,0.5,1.0,20.0,99.6,99.47,99.6

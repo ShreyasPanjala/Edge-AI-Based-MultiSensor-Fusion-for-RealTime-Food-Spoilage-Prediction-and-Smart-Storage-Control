@@ -1,0 +1,9 @@
+| Model | D3 Samples | Predicted FRESH (%) | Predicted SPOILED (%) | Mean P(Spoiled) | Median P(Spoiled) | Std Dev P(Spoiled) | IQR P(Spoiled) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Single-Threshold | 13395 | 35.24 | 64.76 | 0.5361 | 0.69 | 0.314 | 0.58 |
+| Decision Tree | 13395 | 14.74 | 85.26 | 0.8537 | 1.0 | 0.3518 | 0.0 |
+| Logistic Regression | 13395 | 23.71 | 76.29 | 0.7396 | 0.965 | 0.3725 | 0.4287 |
+| Gaussian NB | 13395 | 43.3 | 56.7 | 0.4757 | 0.602 | 0.3311 | 0.7042 |
+| Random Forest | 13395 | 14.74 | 85.26 | 0.855 | 1.0 | 0.3494 | 0.0 |
+| Soft-Voting Hybrid | 13395 | 14.74 | 85.26 | 0.731 | 0.8917 | 0.3217 | 0.2832 |
+| Stacking Hybrid | 13395 | 14.74 | 85.26 | 0.8352 | 0.9992 | 0.351 | 0.0379 |
