@@ -1,0 +1,17 @@
+# Python virtual environments & bytecode
+venv/
+**/venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arduino CLI tools & caches
+.arduino-cli/
+*.zip
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

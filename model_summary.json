@@ -1,0 +1,512 @@
+{
+  "model_name": "Random Forest",
+  "features": [
+    "MQ135"
+  ],
+  "classes": [
+    "EARLY",
+    "LATE"
+  ],
+  "random_forest_config": {
+    "n_estimators": 3,
+    "max_depth": 3,
+    "min_samples_leaf": 5,
+    "random_state": 42
+  },
+  "n_trees": 3,
+  "tree_summary": [
+    {
+      "tree_index": 0,
+      "node_count": 15,
+      "max_depth": 3
+    },
+    {
+      "tree_index": 1,
+      "node_count": 15,
+      "max_depth": 3
+    },
+    {
+      "tree_index": 2,
+      "node_count": 13,
+      "max_depth": 3
+    }
+  ],
+  "tree_structure": [
+    {
+      "tree_index": 0,
+      "nodes": [
+        {
+          "node": 0,
+          "feature": "MQ135",
+          "threshold": 849.5,
+          "left": 1,
+          "right": 8,
+          "late_probability": 0.35115447548633416
+        },
+        {
+          "node": 1,
+          "feature": "MQ135",
+          "threshold": 798.5,
+          "left": 2,
+          "right": 5,
+          "late_probability": 0.025706847270012927
+        },
+        {
+          "node": 2,
+          "feature": "MQ135",
+          "threshold": 729.5,
+          "left": 3,
+          "right": 4,
+          "late_probability": 0.00011199964160114688
+        },
+        {
+          "node": 3,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.0
+        },
+        {
+          "node": 4,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.0017946877243359654
+        },
+        {
+          "node": 5,
+          "feature": "MQ135",
+          "threshold": 821.5,
+          "left": 6,
+          "right": 7,
+          "late_probability": 0.1368144690781797
+        },
+        {
+          "node": 6,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.22842521516631775
+        },
+        {
+          "node": 7,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.07101086048454469
+        },
+        {
+          "node": 8,
+          "feature": "MQ135",
+          "threshold": 853.5,
+          "left": 9,
+          "right": 12,
+          "late_probability": 0.9993473058234825
+        },
+        {
+          "node": 9,
+          "feature": "MQ135",
+          "threshold": 851.5,
+          "left": 10,
+          "right": 11,
+          "late_probability": 0.6428571428571429
+        },
+        {
+          "node": 10,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.75
+        },
+        {
+          "node": 11,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.5454545454545454
+        },
+        {
+          "node": 12,
+          "feature": "MQ135",
+          "threshold": 855.5,
+          "left": 13,
+          "right": 14,
+          "late_probability": 0.9998910517141197
+        },
+        {
+          "node": 13,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.9
+        },
+        {
+          "node": 14,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 1.0
+        }
+      ]
+    },
+    {
+      "tree_index": 1,
+      "nodes": [
+        {
+          "node": 0,
+          "feature": "MQ135",
+          "threshold": 849.5,
+          "left": 1,
+          "right": 8,
+          "late_probability": 0.3558451002969517
+        },
+        {
+          "node": 1,
+          "feature": "MQ135",
+          "threshold": 798.5,
+          "left": 2,
+          "right": 5,
+          "late_probability": 0.027620668826533412
+        },
+        {
+          "node": 2,
+          "feature": "MQ135",
+          "threshold": 797.5,
+          "left": 3,
+          "right": 4,
+          "late_probability": 0.00020370747606437156
+        },
+        {
+          "node": 3,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.00013604208235080717
+        },
+        {
+          "node": 4,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.03896103896103896
+        },
+        {
+          "node": 5,
+          "feature": "MQ135",
+          "threshold": 821.5,
+          "left": 6,
+          "right": 7,
+          "late_probability": 0.14351320321469574
+        },
+        {
+          "node": 6,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.2390710382513661
+        },
+        {
+          "node": 7,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.07425742574257425
+        },
+        {
+          "node": 8,
+          "feature": "MQ135",
+          "threshold": 853.5,
+          "left": 9,
+          "right": 12,
+          "late_probability": 0.9992106773823192
+        },
+        {
+          "node": 9,
+          "feature": "MQ135",
+          "threshold": 852.5,
+          "left": 10,
+          "right": 11,
+          "late_probability": 0.6825396825396826
+        },
+        {
+          "node": 10,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.5945945945945946
+        },
+        {
+          "node": 11,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.8076923076923077
+        },
+        {
+          "node": 12,
+          "feature": "MQ135",
+          "threshold": 855.5,
+          "left": 13,
+          "right": 14,
+          "late_probability": 0.999928080837139
+        },
+        {
+          "node": 13,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.9
+        },
+        {
+          "node": 14,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 1.0
+        }
+      ]
+    },
+    {
+      "tree_index": 2,
+      "nodes": [
+        {
+          "node": 0,
+          "feature": "MQ135",
+          "threshold": 848.5,
+          "left": 1,
+          "right": 8,
+          "late_probability": 0.3548754620932065
+        },
+        {
+          "node": 1,
+          "feature": "MQ135",
+          "threshold": 798.5,
+          "left": 2,
+          "right": 5,
+          "late_probability": 0.026923217617148918
+        },
+        {
+          "node": 2,
+          "feature": "MQ135",
+          "threshold": 796.5,
+          "left": 3,
+          "right": 4,
+          "late_probability": 0.00018036704694052397
+        },
+        {
+          "node": 3,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 9.048136083966703e-05
+        },
+        {
+          "node": 4,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.0273972602739726
+        },
+        {
+          "node": 5,
+          "feature": "MQ135",
+          "threshold": 821.5,
+          "left": 6,
+          "right": 7,
+          "late_probability": 0.14186046511627906
+        },
+        {
+          "node": 6,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.23731587561374795
+        },
+        {
+          "node": 7,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.07430084395167963
+        },
+        {
+          "node": 8,
+          "feature": "MQ135",
+          "threshold": 855.5,
+          "left": 9,
+          "right": 12,
+          "late_probability": 0.9991376522582731
+        },
+        {
+          "node": 9,
+          "feature": "MQ135",
+          "threshold": 849.5,
+          "left": 10,
+          "right": 11,
+          "late_probability": 0.7837837837837838
+        },
+        {
+          "node": 10,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.6666666666666666
+        },
+        {
+          "node": 11,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 0.8111111111111111
+        },
+        {
+          "node": 12,
+          "feature": null,
+          "threshold": null,
+          "left": -1,
+          "right": -1,
+          "late_probability": 1.0
+        }
+      ]
+    }
+  ],
+  "feature_importance": {
+    "MQ135": 1.0
+  },
+  "standard_validation": {
+    "accuracy": 0.9830804285645028,
+    "precision": 0.9834870652726262,
+    "recall": 0.9830804285645028,
+    "f1": 0.9829836678842178,
+    "confusion_matrix": [
+      [
+        13359,
+        4
+      ],
+      [
+        345,
+        6919
+      ]
+    ]
+  },
+  "leave_one_file_out": {
+    "random_forest_average_accuracy": 0.801483882744859,
+    "reference_best_average_accuracy": 0.8355,
+    "reference_best_model": "Gaussian NB",
+    "results": [
+      {
+        "file": "Banana D1.csv",
+        "label": "EARLY",
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "confusion_matrix": [
+          [
+            27707,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "file": "Banana D2.csv",
+        "label": "EARLY",
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "confusion_matrix": [
+          [
+            12347,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "file": "Banana D3.csv",
+        "label": "EARLY",
+        "accuracy": 0.14744307577454274,
+        "precision": 1.0,
+        "recall": 0.14744307577454274,
+        "f1": 0.25699414443721535,
+        "confusion_matrix": [
+          [
+            1975,
+            11420
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "file": "Banana D4.csv",
+        "label": "LATE",
+        "accuracy": 0.8599763379497529,
+        "precision": 1.0,
+        "recall": 0.8599763379497529,
+        "f1": 0.9247175035545911,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            2012,
+            12357
+          ]
+        ]
+      },
+      {
+        "file": "Banana D5.csv",
+        "label": "LATE",
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "confusion_matrix": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            14687
+          ]
+        ]
+      }
+    ]
+  },
+  "dataset_limitation": "The training dataset has MQ gas sensor columns only. DHT22 temperature and humidity are read on ESP32 for display/logging but are not ML inputs."
+}
