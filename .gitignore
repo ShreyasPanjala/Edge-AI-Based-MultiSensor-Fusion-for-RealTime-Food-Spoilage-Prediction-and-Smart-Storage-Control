@@ -1,14 +1,30 @@
 # Python virtual environments & bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
 venv/
 **/venv/
 .venv/
-__pycache__/
-*.py[cod]
-*$py.class
+env/
 
 # Arduino CLI tools & caches
 .arduino-cli/
 *.zip
+
+# Environment variables & secrets
+.env
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Runtime database & logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
 
 # OS and Editor files
 .DS_Store
