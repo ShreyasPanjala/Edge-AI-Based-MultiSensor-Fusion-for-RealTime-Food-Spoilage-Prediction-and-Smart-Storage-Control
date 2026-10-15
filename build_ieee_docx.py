@@ -64,32 +64,47 @@ def create_ieee_document():
     run_title.font.size = Pt(24)
     run_title.bold = True
 
-    # Author Table (3 authors centered across 3 columns)
-    auth_table = doc.add_table(rows=1, cols=3)
+    # Author Table (5 authors: Row 1 has 3 authors, Row 2 has 2 authors matching IEEE format)
+    auth_table = doc.add_table(rows=2, cols=3)
     auth_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
     authors_data = [
-        ("Author 1", "dept. name of organization", "name of organization", "City, Country", "author1@institution.edu"),
-        ("Author 2", "dept. name of organization", "name of organization", "City, Country", "author2@institution.edu"),
-        ("Author 3", "dept. name of organization", "name of organization", "City, Country", "author3@institution.edu"),
+        # Row 1: Authors 1, 2, 3
+        (0, 0, "1st Shreyas P", "Department of Artificial Intelligence\nand Data Science", "KLH", "Hyderabad, India", "[email address or ORCID]"),
+        (0, 1, "2nd Ch. Karthikeya", "Department of Artificial Intelligence\nand Data Science", "KLH", "Hyderabad, India", "[email address or ORCID]"),
+        (0, 2, "3rd Abhinav S", "Department of Artificial Intelligence\nand Data Science", "KLH", "Hyderabad, India", "[email address or ORCID]"),
+        # Row 2: Authors 4, 5
+        (1, 0, "4th Vasudeva", "Department of Artificial Intelligence\nand Data Science", "KLH", "Hyderabad, India", "[email address or ORCID]"),
+        (1, 1, "5th T. Harsha Vardhan", "Department of Artificial Intelligence\nand Data Science", "KLH", "Hyderabad, India", "[email address or ORCID]"),
     ]
-    for col_idx, (name, dept, org, loc, email) in enumerate(authors_data):
-        cell = auth_table.rows[0].cells[col_idx]
-        cell.width = Inches(2.4)
+
+    for row_idx in range(2):
+        for col_idx in range(3):
+            cell = auth_table.rows[row_idx].cells[col_idx]
+            cell.width = Inches(2.41)
+            # Remove all borders from author table cells
+            set_cell_borders(cell, top="none", bottom="none", left="none", right="none")
+
+    for row_idx, col_idx, name, dept, org, loc, email in authors_data:
+        cell = auth_table.rows[row_idx].cells[col_idx]
         p = cell.paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.space_before = Pt(4)
         p.paragraph_format.space_after = Pt(2)
         p.paragraph_format.line_spacing = 1.0
 
         r_name = p.add_run(f"{name}\n")
         r_name.font.name = "Times New Roman"
-        r_name.font.size = Pt(11)
-        r_name.bold = True
+        r_name.font.size = Pt(10.5)
 
-        r_dept = p.add_run(f"{dept}\n{org}\n{loc}\n")
+        r_dept = p.add_run(f"{dept}\n{org}\n")
         r_dept.font.name = "Times New Roman"
-        r_dept.font.size = Pt(10)
+        r_dept.font.size = Pt(9.5)
         r_dept.italic = True
+
+        r_loc = p.add_run(f"{loc}\n")
+        r_loc.font.name = "Times New Roman"
+        r_loc.font.size = Pt(9.5)
 
         r_mail = p.add_run(email)
         r_mail.font.name = "Times New Roman"

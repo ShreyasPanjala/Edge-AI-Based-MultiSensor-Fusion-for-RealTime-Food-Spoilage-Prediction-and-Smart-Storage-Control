@@ -1,9 +1,9 @@
 # A Zero-Allocation TinyML Stacking Hybrid Architecture for Real-Time Volatile Fruit Spoilage Detection on Edge Microcontrollers
 
-**Author 1**, **Author 2**, and **Author 3**  
-*Department of Computer Science and Engineering / Department of Electrical Engineering*  
-*University / Institute Name*  
-*Email: {author1, author2, author3}@institution.edu*
+**1st Shreyas P**, **2nd Ch. Karthikeya**, **3rd Abhinav S**, **4th Vasudeva**, and **5th T. Harsha Vardhan**  
+*Department of Artificial Intelligence and Data Science*  
+*KLH, Hyderabad, India*  
+*{email address or ORCID}*
 
 ---
 
