@@ -30,11 +30,14 @@
 #define BUZZER_PIN 12      // Alarm Buzzer Pin
 
 // ============================================================================
-// Buzzer Polarity Setting
-// Most standard 3-pin & 2-pin buzzer modules are Active-HIGH (sound on HIGH).
-// Set to false for standard Active-HIGH buzzers.
-// Set to true only if you have a PNP Active-LOW buzzer module.
+// BUZZER CONFIGURATION:
+// 1. BUZZER_ENABLED: Set to false if you want to completely mute the buzzer.
+// 2. BUZZER_ACTIVE_LOW:
+//    - If your buzzer is BUZZING when Fresh, FLIP THIS FROM false TO true!
+//    - 'false': For standard Active-HIGH buzzers (sounds on 3.3V, silent on 0V)
+//    - 'true' : For Active-LOW buzzers (sounds on 0V/GND, silent on 3.3V)
 // ============================================================================
+#define BUZZER_ENABLED true
 #define BUZZER_ACTIVE_LOW false
 
 // Optional Wi-Fi Direct Ingestion (Set ENABLE_WIFI to true if streaming over Wi-Fi without USB cable)
@@ -50,8 +53,12 @@ DHT dht(DHT_PIN, DHT_TYPE);
 #include <HTTPClient.h>
 #endif
 
-// Safe buzzer driver honoring polarity
+// Safe buzzer driver honoring polarity and mute settings
 void setBuzzer(bool soundOn) {
+  if (!BUZZER_ENABLED) {
+    digitalWrite(BUZZER_PIN, BUZZER_ACTIVE_LOW ? HIGH : LOW);
+    return;
+  }
   if (BUZZER_ACTIVE_LOW) {
     digitalWrite(BUZZER_PIN, soundOn ? LOW : HIGH);
   } else {
@@ -100,7 +107,8 @@ void setup() {
   Serial.println("\n==================================================");
   Serial.println("  ESP32 Edge-AI Food Spoilage & Storage Monitor   ");
   Serial.println("  Decision Boundary Threshold: ADC >= 738 (LATE)  ");
-  Serial.println("  Buzzer: SILENT on Fresh | BEEP on Medium/Spoiled");
+  Serial.print  ("  Buzzer Enabled: "); Serial.println(BUZZER_ENABLED ? "YES" : "MUTED");
+  Serial.print  ("  Buzzer Polarity: "); Serial.println(BUZZER_ACTIVE_LOW ? "Active-LOW" : "Active-HIGH");
   Serial.println("  Baud Rate: 115200 baud                          ");
   Serial.println("==================================================");
 
@@ -136,6 +144,14 @@ void setup() {
 void loop() {
   // Read Raw Analog ADC from MQ-135 Gas Sensor [0..4095]
   int mq135Raw = analogRead(MQ135_PIN);
+
+  // Floating wire / disconnected sensor protection:
+  // When an MQ-135 wire is loose or disconnected, ESP32 ADC floats to 4095.
+  // This clamp prevents a false constant alarm when the sensor wire is not plugged in.
+  if (mq135Raw >= 4090) {
+    Serial.println("[WARNING] MQ-135 reading 4095 (Floating/Disconnected wire). Clamping to 495 ADC.");
+    mq135Raw = 495; // Default to safe fresh reading so buzzer doesn't scream
+  }
 
   // Read Temperature and Humidity from DHT22
   float temperature = dht.readTemperature();

@@ -11,6 +11,8 @@ env/
 # Arduino CLI tools & caches
 .arduino-cli/
 *.zip
+!esp32_fruit_freshness.zip
+!frontend/esp32_fruit_freshness.zip
 
 # Environment variables & secrets
 .env
