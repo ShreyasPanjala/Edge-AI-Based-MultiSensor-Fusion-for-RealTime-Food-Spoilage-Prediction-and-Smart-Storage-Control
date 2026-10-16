@@ -20,15 +20,18 @@ class Settings(BaseSettings):
 
     # ML Inference Settings
     # ML_MODE: "mock" or "real"
-    ML_MODE: str = "mock"
-    MODEL_PATH: str = "./ml/model.joblib"
+    ML_MODE: str = "real"
+    MODEL_PATH: str = "./models/final_hybrid.pkl"
 
     # CORS Configuration
     CORS_ORIGINS: Union[List[str], str] = [
+        "*",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ]
 
     @field_validator("CORS_ORIGINS", mode="before")

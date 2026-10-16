@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edge-AI Multi-Sensor Food Spoilage & Smart Storage Monitor</title>
+  <meta name="description" content="Real-Time E-Nose TinyML Multi-Sensor Food Spoilage Classifier and Smart Storage Control Prototype.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!-- Background Glow Accents -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Main Container -->
+  <div class="dashboard-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-branding">
+        <div class="logo-badge">
+          <div class="chip-icon">
+            <span class="icon-node"></span>
+            <span class="icon-pulse"></span>
+          </div>
+          <div class="branding-text">
+            <h1>Edge-AI E-Nose Smart Food Storage</h1>
+            <p class="subtitle">Multi-Sensor Fusion • TinyML Inference (<span class="badge-accent">&lt;1.0 µs</span>) • Automated Climate Actuation</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Subsystem Health Indicators -->
+        <div class="status-pills">
+          <div class="status-pill" id="backendStatusPill" title="FastAPI REST Backend">
+            <span class="pill-dot green"></span>
+            <span class="pill-label">API: <strong id="backendStatusText">ONLINE</strong></span>
+          </div>
+          <div class="status-pill" id="mlStatusPill" title="Loaded ML Model Status">
+            <span class="pill-dot green"></span>
+            <span class="pill-label">ML: <strong id="mlStatusText">STACKING HYBRID</strong></span>
+          </div>
+          <div class="status-pill" id="edgeStatusPill" title="ESP32 Microcontroller Edge Telemetry">
+            <span class="pill-dot cyan pulse"></span>
+            <span class="pill-label">ESP32: <strong id="edgeStatusText">SYNCED</strong></span>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button id="connectSerialBtn" class="btn-primary" title="Connect directly to physical ESP32 via USB (Web Serial)">
+            <span>🔌 Connect USB ESP32</span>
+          </button>
+          <button id="toggleAudioBtn" class="btn-icon" title="Toggle Alarm Sound" aria-label="Toggle Alarm Sound">
+            <span id="audioIcon">🔊</span>
+          </button>
+          <button id="toggleStreamingBtn" class="btn-secondary" title="Simulate continuous live ESP32 edge stream">
+            <span class="btn-dot"></span>
+            <span id="streamBtnText">Simulation Stream</span>
+          </button>
+          <a href="/static/esp32_fruit_freshness.zip" download="esp32_fruit_freshness.zip" class="btn-outline" title="Download Complete ESP32 Firmware ZIP Package">
+            <span>📦 Firmware .ZIP</span>
+          </a>
+          <a href="/docs" target="_blank" class="btn-outline" title="Open Swagger API Docs">
+            <span>API Docs ↗</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Grid: Hero Freshness Gauge + Live Multi-Sensor KPIs -->
+    <main class="dashboard-grid">
+      <!-- Section 1: Hero Spoilage Assessment Card -->
+      <section class="card hero-spoilage-card" id="spoilageHeroSection">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-tag">Real-Time ML Assessment</span>
+            <h2>Produce Condition &amp; Spoilage Risk</h2>
+          </div>
+          <div class="model-badge" id="modelArchitectureBadge">
+            Stacking Hybrid (TinyML Flash LUT)
+          </div>
+        </div>
+
+        <div class="hero-spoilage-body">
+          <!-- Condition Badge Visual -->
+          <div class="condition-display-wrapper">
+            <div class="condition-glow-ring" id="conditionGlowRing">
+              <div class="condition-badge" id="conditionBadge">
+                <span class="badge-icon" id="conditionIcon">🌿</span>
+                <span class="badge-state" id="conditionStateText">FRESH</span>
+                <span class="badge-stage" id="conditionStageText">EARLY STAGE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spoilage Probability & Confidence Metrics -->
+          <div class="spoilage-metrics-panel">
+            <div class="metric-row">
+              <div class="metric-info">
+                <span class="metric-label">Spoilage Probability P(Spoiled)</span>
+                <span class="metric-value-huge" id="spoilageProbText">0.03%</span>
+              </div>
+              <div class="confidence-tag">
+                <span>Confidence: </span>
+                <strong id="confidenceScoreText">99.9%</strong>
+              </div>
+            </div>
+
+            <!-- Probability Bar with Boundary Marker -->
+            <div class="progress-track-wrapper">
+              <div class="progress-track">
+                <div class="progress-fill" id="spoilageProgressBar" style="width: 2%;"></div>
+                <div class="boundary-marker" title="Decision Boundary Threshold (50% / ADC 738)" style="left: 50%;">
+                  <span class="boundary-label">Decision Boundary</span>
+                </div>
+              </div>
+              <div class="progress-labels">
+                <span>0% (Fresh)</span>
+                <span>25% (Warning)</span>
+                <span>50% (Spoilage Boundary)</span>
+                <span>100% (Spoiled)</span>
+              </div>
+            </div>
+
+            <!-- Shelf-Life & Diagnostics -->
+            <div class="shelf-life-box" id="shelfLifeBox">
+              <div class="shelf-life-header">
+                <span class="shelf-icon">⏱️</span>
+                <span class="shelf-label">Estimated Remaining Shelf Life:</span>
+                <strong id="shelfLifeValue" class="shelf-val">4 - 6 Days (Safe for Distribution)</strong>
+              </div>
+              <p class="shelf-recommendation" id="shelfRecommendationText">
+                Maintain chamber temperature (13-15°C) and baseline ventilation. Gas concentration stable.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Multi-Sensor Live Environmental Gauges -->
+      <section class="card sensor-kpi-card" id="sensorKpiSection">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-tag">Multi-Sensor Ingestion</span>
+            <h2>Environmental Telemetry</h2>
+          </div>
+          <span class="live-pulse-badge"><span class="pulse-ring"></span> Live 2s Telemetry</span>
+        </div>
+
+        <div class="kpi-grid">
+          <!-- MQ-135 Gas Sensor -->
+          <div class="kpi-item" id="mq135Kpi">
+            <div class="kpi-top">
+              <span class="kpi-icon gas-icon">☁️</span>
+              <span class="kpi-name">MQ-135 Gas (VOCs)</span>
+              <span class="kpi-pill" id="mq135StatusPill">OPTIMAL</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="mq135ValueText">495</span>
+              <span class="kpi-unit">ADC / 12-bit</span>
+            </div>
+            <div class="kpi-threshold-info">
+              <span>Threshold Boundary: <strong>738 ADC</strong></span>
+              <div class="kpi-mini-bar">
+                <div class="kpi-mini-fill" id="mq135MiniBar" style="width: 25%;"></div>
+              </div>
+            </div>
+            <span class="kpi-subtext" id="mq135Subtext">Detects Ethylene, Ethanol &amp; Ammonia volatiles</span>
+          </div>
+
+          <!-- DHT22 Temperature Sensor -->
+          <div class="kpi-item" id="tempKpi">
+            <div class="kpi-top">
+              <span class="kpi-icon temp-icon">🌡️</span>
+              <span class="kpi-name">DHT22 Temperature</span>
+              <span class="kpi-pill" id="tempStatusPill">OPTIMAL</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="tempValueText">14.2</span>
+              <span class="kpi-unit">°C</span>
+              <span class="kpi-secondary" id="tempFahrenheitText">(57.6°F)</span>
+            </div>
+            <div class="kpi-threshold-info">
+              <span>Optimal Window: <strong>13.0°C – 15.0°C</strong></span>
+              <div class="kpi-mini-bar">
+                <div class="kpi-mini-fill temp-fill" id="tempMiniBar" style="width: 45%;"></div>
+              </div>
+            </div>
+            <span class="kpi-subtext" id="tempSubtext">Prevents accelerated ripening &amp; chilling injury</span>
+          </div>
+
+          <!-- DHT22 Humidity Sensor -->
+          <div class="kpi-item" id="humKpi">
+            <div class="kpi-top">
+              <span class="kpi-icon hum-icon">💧</span>
+              <span class="kpi-name">DHT22 Relative Humidity</span>
+              <span class="kpi-pill" id="humStatusPill">OPTIMAL</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="humValueText">86.4</span>
+              <span class="kpi-unit">% RH</span>
+            </div>
+            <div class="kpi-threshold-info">
+              <span>Optimal Window: <strong>80.0% – 90.0%</strong></span>
+              <div class="kpi-mini-bar">
+                <div class="kpi-mini-fill hum-fill" id="humMiniBar" style="width: 86%;"></div>
+              </div>
+            </div>
+            <span class="kpi-subtext" id="humSubtext">Maintains moisture, inhibits fungal condensation</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Smart Storage Actuator Hardware Mock -->
+      <section class="card actuator-card" id="actuatorSection">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-tag">Smart Storage Control</span>
+            <h2>ESP32 Actuator Relays</h2>
+          </div>
+          <div class="override-switch-group">
+            <label class="switch-label" for="manualOverrideToggle">Manual Override:</label>
+            <label class="switch">
+              <input type="checkbox" id="manualOverrideToggle">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="actuator-grid">
+          <!-- GPIO 13 Alert LED -->
+          <div class="actuator-item" id="alertLedActuator">
+            <div class="actuator-graphic">
+              <div class="led-fixture" id="ledFixture">
+                <div class="led-bulb" id="ledBulb"></div>
+                <div class="led-beam" id="ledBeam"></div>
+              </div>
+            </div>
+            <div class="actuator-meta">
+              <div class="actuator-title">
+                <span class="pin-tag">GPIO 13</span>
+                <h3>Visual Alert LED</h3>
+              </div>
+              <span class="actuator-state-badge green" id="ledStateText">GREEN (NORMAL)</span>
+              <p class="actuator-desc">Solid Green for safe storage, Amber for transition warning, pulsing Red for spoilage alert.</p>
+            </div>
+          </div>
+
+          <!-- GPIO 12 Active Buzzer -->
+          <div class="actuator-item" id="buzzerActuator">
+            <div class="actuator-graphic">
+              <div class="buzzer-fixture" id="buzzerFixture">
+                <span class="buzzer-horn">📢</span>
+                <div class="audio-waves" id="audioWaves">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+            <div class="actuator-meta">
+              <div class="actuator-title">
+                <span class="pin-tag">GPIO 12</span>
+                <h3>Acoustic Alarm Buzzer</h3>
+              </div>
+              <span class="actuator-state-badge off" id="buzzerStateText">INACTIVE</span>
+              <p class="actuator-desc">Active-LOW audio beacon triggered when produce crosses the spoilage threshold.</p>
+            </div>
+          </div>
+
+          <!-- Chamber Exhaust Fan Relay -->
+          <div class="actuator-item" id="fanActuator">
+            <div class="actuator-graphic">
+              <div class="fan-fixture" id="fanFixture">
+                <div class="fan-blades" id="fanBlades">
+                  <span class="blade b1"></span>
+                  <span class="blade b2"></span>
+                  <span class="blade b3"></span>
+                  <span class="blade b4"></span>
+                </div>
+                <div class="fan-center"></div>
+              </div>
+            </div>
+            <div class="actuator-meta">
+              <div class="actuator-title">
+                <span class="pin-tag">Relay CH1</span>
+                <h3>Ventilation Exhaust Fan</h3>
+              </div>
+              <span class="actuator-state-badge off" id="fanStateText">STANDBY</span>
+              <p class="actuator-desc">Purges ethylene &amp; VOC gases to decelerate climacteric ripening cascades.</p>
+            </div>
+          </div>
+
+          <!-- Cooling Unit Compressor -->
+          <div class="actuator-item" id="coolingActuator">
+            <div class="actuator-graphic">
+              <div class="cooling-fixture" id="coolingFixture">
+                <span class="compressor-icon">❄️</span>
+                <div class="frost-rings" id="frostRings"></div>
+              </div>
+            </div>
+            <div class="actuator-meta">
+              <div class="actuator-title">
+                <span class="pin-tag">Relay CH2</span>
+                <h3>Cooling Compressor</h3>
+              </div>
+              <span class="actuator-state-badge off" id="coolingStateText">OFF (TEMP OK)</span>
+              <p class="actuator-desc">Engages thermoelectric refrigeration when ambient temperature exceeds 15.5°C.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Edge TinyML Profile Specs Card -->
+      <section class="card tinyml-card" id="tinymlSection">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-tag">Edge Architecture</span>
+            <h2>ESP32 Embedded Profile</h2>
+          </div>
+          <span class="verified-badge">✓ 100% C++ Parity</span>
+        </div>
+
+        <div class="tinyml-metrics-grid">
+          <div class="tinyml-stat">
+            <span class="stat-label">Inference Latency</span>
+            <span class="stat-num cyan">&lt; 1.0 µs</span>
+            <span class="stat-sub">O(1) Flash Lookup Table</span>
+          </div>
+          <div class="tinyml-stat">
+            <span class="stat-label">Dynamic Heap Allocation</span>
+            <span class="stat-num emerald">0 Bytes</span>
+            <span class="stat-sub">Static const PROGMEM</span>
+          </div>
+          <div class="tinyml-stat">
+            <span class="stat-label">Flash Program Storage</span>
+            <span class="stat-num">296.9 KB</span>
+            <span class="stat-sub">22.0% of 1.3 MB Budget</span>
+          </div>
+          <div class="tinyml-stat">
+            <span class="stat-label">Dynamic SRAM Usage</span>
+            <span class="stat-num">22.2 KB</span>
+            <span class="stat-sub">6.0% of 320 KB SRAM</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Interactive Testing Harness & Real Dataset Ingestion -->
+      <section class="card test-harness-card" id="testHarnessSection">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-tag">Simulation &amp; Testing</span>
+            <h2>Multi-Sensor Test Harness &amp; Dataset Playback</h2>
+          </div>
+          <span class="info-pill">Interactive Hardware Injection</span>
+        </div>
+
+        <div class="harness-content">
+          <!-- 1-Click Real Benchmark Datasets -->
+          <div class="harness-subgroup">
+            <div class="subgroup-title">
+              <h4>Load Real Experiment Data (Banana Days 1–5):</h4>
+              <span class="subgroup-hint">Select a day to stream authentic E-Nose sensor readings from the research dataset</span>
+            </div>
+
+            <div class="dataset-btn-group">
+              <button class="btn-day fresh" id="loadD1Btn" data-day="D1">
+                <span class="day-dot"></span>
+                <strong>Day 1 (Fresh - D1)</strong>
+                <small>MQ135 ~495 ADC</small>
+              </button>
+              <button class="btn-day fresh" id="loadD2Btn" data-day="D2">
+                <span class="day-dot"></span>
+                <strong>Day 2 (Fresh - D2)</strong>
+                <small>MQ135 ~545 ADC</small>
+              </button>
+              <button class="btn-day transition" id="loadD3Btn" data-day="D3">
+                <span class="day-dot"></span>
+                <strong>Day 3 (Climacteric - D3)</strong>
+                <small>MQ135 ~650 ADC</small>
+              </button>
+              <button class="btn-day spoiled" id="loadD4Btn" data-day="D4">
+                <span class="day-dot"></span>
+                <strong>Day 4 (Spoiled - D4)</strong>
+                <small>MQ135 ~820 ADC</small>
+              </button>
+              <button class="btn-day spoiled" id="loadD5Btn" data-day="D5">
+                <span class="day-dot"></span>
+                <strong>Day 5 (Advanced Rot - D5)</strong>
+                <small>MQ135 ~1150 ADC</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Manual Calibration Sliders -->
+          <div class="harness-subgroup">
+            <div class="subgroup-title">
+              <h4>Manual Calibration Sliders:</h4>
+              <span class="subgroup-hint">Adjust inputs to test threshold boundaries and edge scenarios in real time</span>
+            </div>
+
+            <div class="sliders-grid">
+              <!-- MQ135 Slider -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="mq135Slider">MQ-135 Gas Sensor Reading:</label>
+                  <span class="slider-val-badge" id="mq135SliderVal">495 ADC</span>
+                </div>
+                <input type="range" id="mq135Slider" min="0" max="2500" value="495" step="5">
+                <div class="slider-range-labels">
+                  <span>0 ADC (Zero Gas)</span>
+                  <span class="threshold-tag">Threshold: 738 ADC</span>
+                  <span>2500 ADC (Heavy Spoilage)</span>
+                </div>
+              </div>
+
+              <!-- Temperature Slider -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="tempSlider">Ambient Temperature:</label>
+                  <span class="slider-val-badge" id="tempSliderVal">14.2 °C</span>
+                </div>
+                <input type="range" id="tempSlider" min="0" max="40" value="14.2" step="0.2">
+                <div class="slider-range-labels">
+                  <span>0°C (Freezing)</span>
+                  <span class="opt-tag">Optimum: 13-15°C</span>
+                  <span>40°C (High Heat)</span>
+                </div>
+              </div>
+
+              <!-- Humidity Slider -->
+              <div class="slider-control">
+                <div class="slider-header">
+                  <label for="humSlider">Relative Humidity:</label>
+                  <span class="slider-val-badge" id="humSliderVal">86.4 %</span>
+                </div>
+                <input type="range" id="humSlider" min="20" max="100" value="86.4" step="0.5">
+                <div class="slider-range-labels">
+                  <span>20% (Dry)</span>
+                  <span class="opt-tag">Optimum: 80-90%</span>
+                  <span>100% (Saturated)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ingest Trigger Button -->
+            <div class="harness-actions">
+              <button id="sendReadingBtn" class="btn-primary">
+                <span>⚡ Ingest Telemetry to Backend</span>
+              </button>
+              <button id="livePreviewBtn" class="btn-secondary">
+                <span>🔍 Instant Preview Inference (No DB save)</span>
+              </button>
+              <span class="ingest-status-msg" id="ingestStatusMsg"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Real-Time Telemetry Trends Chart -->
+      <section class="card chart-card" id="chartSection">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-tag">Temporal Analysis</span>
+            <h2>Multi-Sensor Dynamic Telemetry Curves</h2>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot mq135"></span> MQ-135 Gas (ADC)</span>
+            <span class="legend-item"><span class="legend-dot threshold"></span> Threshold (738 ADC)</span>
+            <span class="legend-item"><span class="legend-dot temp"></span> Temp (°C)</span>
+            <span class="legend-item"><span class="legend-dot hum"></span> Humidity (%)</span>
+            <span class="legend-item"><span class="legend-dot prob"></span> Spoilage Risk (%)</span>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="telemetryCanvas" width="900" height="280"></canvas>
+        </div>
+      </section>
+
+      <!-- Section 7: Historical Telemetry Records Table -->
+      <section class="card table-card" id="tableSection">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-tag">Persistent SQLite Log</span>
+            <h2>Historical Telemetry Stream</h2>
+          </div>
+          <div class="table-actions">
+            <button id="exportCsvBtn" class="btn-sm btn-outline">📥 Export CSV</button>
+            <button id="clearHistoryBtn" class="btn-sm btn-danger">🗑️ Reset History</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="telemetry-table" id="telemetryTable">
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>UTC Timestamp</th>
+                <th>MQ-135 Gas (ADC)</th>
+                <th>Temperature</th>
+                <th>Humidity</th>
+                <th>Model Prediction</th>
+                <th>Actuator State</th>
+              </tr>
+            </thead>
+            <tbody id="telemetryTableBody">
+              <tr>
+                <td colspan="7" class="empty-state">Loading telemetry records from database...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p><strong>Edge-AI Multi-Sensor Fusion System for Real-Time Food Spoilage Prediction &amp; Smart Storage Control</strong></p>
+        <p class="footer-meta">Dataset: 5-Day Banana Volatile E-Nose Corpus • Target: ESP32 Microcontroller • Model: Calibrated Stacking Hybrid</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Audio Context Synthesizer Script -->
+  <script src="/static/app.js"></script>
+</body>
+</html>

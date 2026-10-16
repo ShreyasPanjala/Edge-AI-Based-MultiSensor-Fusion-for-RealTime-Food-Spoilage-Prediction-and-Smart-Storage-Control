@@ -31,3 +31,6 @@ htmlcov/
 Thumbs.db
 .vscode/
 .idea/
+~$*
+scratch/
+

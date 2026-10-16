@@ -49,6 +49,13 @@ class StorageService:
             .all()
         )
 
+    def clear_history(self, db: Session) -> int:
+        """Clear all historical sensor readings from database."""
+        deleted = db.query(SensorReadingDB).delete()
+        db.commit()
+        logger.info(f"Cleared {deleted} records from sensor_readings table.")
+        return deleted
+
     def check_health(self, db: Session) -> bool:
         """Perform a lightweight database health check ping."""
         try:
@@ -60,3 +67,4 @@ class StorageService:
 
 
 storage_service = StorageService()
+

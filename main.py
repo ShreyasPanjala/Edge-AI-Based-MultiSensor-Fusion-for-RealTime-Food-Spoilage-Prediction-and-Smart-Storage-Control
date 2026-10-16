@@ -88,10 +88,23 @@ app.include_router(prediction_router)
 app.include_router(system_router)
 
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, RedirectResponse
+
+FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
+if FRONTEND_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+
+
 @app.get("/", include_in_schema=False)
 def root():
-    """Redirect root path to interactive Swagger documentation."""
+    """Serve the real-time Edge-AI frontend dashboard prototype."""
+    index_file = FRONTEND_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
     return RedirectResponse(url="/docs")
+
 
 
 if __name__ == "__main__":
