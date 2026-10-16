@@ -7,13 +7,13 @@
  * - DHT22 Temperature & Humidity (GPIO 4)
  * 
  * Actuators:
- * - Alert LED (GPIO 13, Active-HIGH)
- * - Alarm Buzzer (GPIO 12, Active-LOW)
+ * - Alert LED (GPIO 13)
+ * - Alarm Buzzer (GPIO 12)
  * 
- * Telemetry Output:
- * - USB Serial at 115200 baud (both human-readable & instant JSON lines)
- * - Direct Web Serial & Python Bridge compatible
- * - Optional Wi-Fi HTTP POST direct to backend
+ * Buzzer Behavior:
+ * - FRESH (ADC < 620): COMPLETELY SILENT (Zero beeping)
+ * - MEDIUM SPOILED (620 <= ADC < 738): Intermittent warning double-pip alert
+ * - FULL SPOILED (ADC >= 738): Rapid continuous critical alarm beeps
  */
 
 #include <Arduino.h>
@@ -27,7 +27,15 @@
 #define DHT_PIN 4          // Digital I/O with 10k pull-up
 #define DHT_TYPE DHT22     // AM2302 / DHT22 sensor
 #define LED_PIN 13         // Visual Alert LED (Anode via 220 Ohm)
-#define BUZZER_PIN 12      // Active-LOW Acoustic Alarm Buzzer
+#define BUZZER_PIN 12      // Alarm Buzzer Pin
+
+// ============================================================================
+// Buzzer Polarity Setting
+// Most standard 3-pin & 2-pin buzzer modules are Active-HIGH (sound on HIGH).
+// Set to false for standard Active-HIGH buzzers.
+// Set to true only if you have a PNP Active-LOW buzzer module.
+// ============================================================================
+#define BUZZER_ACTIVE_LOW false
 
 // Optional Wi-Fi Direct Ingestion (Set ENABLE_WIFI to true if streaming over Wi-Fi without USB cable)
 #define ENABLE_WIFI false
@@ -41,6 +49,15 @@ DHT dht(DHT_PIN, DHT_TYPE);
 #include <WiFi.h>
 #include <HTTPClient.h>
 #endif
+
+// Safe buzzer driver honoring polarity
+void setBuzzer(bool soundOn) {
+  if (BUZZER_ACTIVE_LOW) {
+    digitalWrite(BUZZER_PIN, soundOn ? LOW : HIGH);
+  } else {
+    digitalWrite(BUZZER_PIN, soundOn ? HIGH : LOW);
+  }
+}
 
 // ============================================================================
 // Latency Benchmark (10,000 Inferences over Flash LUT)
@@ -73,9 +90,17 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
+  // Initialize Actuator Pins FIRST to guarantee buzzer starts completely SILENT
+  pinMode(BUZZER_PIN, OUTPUT);
+  setBuzzer(false); // Guarantee buzzer is SILENT at boot
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW); // LED Off
+
   Serial.println("\n==================================================");
   Serial.println("  ESP32 Edge-AI Food Spoilage & Storage Monitor   ");
   Serial.println("  Decision Boundary Threshold: ADC >= 738 (LATE)  ");
+  Serial.println("  Buzzer: SILENT on Fresh | BEEP on Medium/Spoiled");
   Serial.println("  Baud Rate: 115200 baud                          ");
   Serial.println("==================================================");
 
@@ -83,12 +108,6 @@ void setup() {
   dht.begin();
   analogReadResolution(12); // 12-bit ADC [0..4095]
   analogSetPinAttenuation(MQ135_PIN, ADC_11db); // Full range 0 - 3.3V
-
-  // Initialize Actuator Pins
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);    // LED Off
-  digitalWrite(BUZZER_PIN, HIGH);// Active-LOW Buzzer Off (HIGH = silent)
 
   // Run onboard latency verification
   runLatencyBenchmark();
@@ -131,13 +150,52 @@ void loop() {
   float lateProbability = predictLateProbability((float)mq135Raw);
   float confidence = predictConfidence((float)mq135Raw);
 
-  // Hardware Actuator Control Logic
-  if (strcmp(prediction, "LATE") == 0 || mq135Raw >= HYBRID_DECISION_THRESHOLD) {
-    digitalWrite(LED_PIN, HIGH);   // Visual Alert LED ON (Red)
-    digitalWrite(BUZZER_PIN, LOW); // Active-LOW Buzzer ON (Alert sound)
+  const char* stageLabel = "Fresh";
+
+  // ========================================================================
+  // Multi-Stage Actuation Control Logic:
+  // 1. FRESH (mq135Raw < 620): COMPLETELY SILENT (Zero beeping)
+  // 2. MEDIUM SPOILED (620 <= mq135Raw < 738): Intermittent warning double-pip
+  // 3. FULL SPOILED (mq135Raw >= 738): Continuous rapid critical alarm
+  // ========================================================================
+  if (mq135Raw >= HYBRID_DECISION_THRESHOLD || strcmp(prediction, "LATE") == 0) {
+    // ----------------------------------------------------------------------
+    // STAGE 3: FULL SPOILED (Critical Spoilage)
+    // ----------------------------------------------------------------------
+    stageLabel = "Spoiled";
+    digitalWrite(LED_PIN, HIGH); // Red LED ON
+
+    // Urgent 3-beep alarm burst
+    for (int i = 0; i < 3; i++) {
+      setBuzzer(true);
+      delay(70);
+      setBuzzer(false);
+      delay(60);
+    }
+  } else if (mq135Raw >= 620) {
+    // ----------------------------------------------------------------------
+    // STAGE 2: MEDIUM SPOILED (Climacteric Ripening Transition)
+    // ----------------------------------------------------------------------
+    stageLabel = "Warning";
+    
+    // Blink LED once and emit a moderate double-pip warning
+    digitalWrite(LED_PIN, HIGH);
+    setBuzzer(true);
+    delay(50);
+    setBuzzer(false);
+    delay(70);
+    setBuzzer(true);
+    delay(50);
+    setBuzzer(false);
+    digitalWrite(LED_PIN, LOW);
   } else {
-    digitalWrite(LED_PIN, LOW);    // Visual Alert LED OFF
-    digitalWrite(BUZZER_PIN, HIGH);// Active-LOW Buzzer OFF (Silent)
+    // ----------------------------------------------------------------------
+    // STAGE 1: FRESH (Safe Produce)
+    // COMPLETELY SILENT! ZERO BEEPING!
+    // ----------------------------------------------------------------------
+    stageLabel = "Fresh";
+    setBuzzer(false);           // Turn buzzer completely OFF (0V)
+    digitalWrite(LED_PIN, LOW); // Turn LED OFF
   }
 
   // 1. Human-Readable Serial Stream (For Arduino Serial Monitor)
@@ -149,7 +207,7 @@ void loop() {
   Serial.print("Humidity: ");
   Serial.println(humidity, 1);
   Serial.print("Prediction: ");
-  Serial.println(prediction);
+  Serial.println(stageLabel);
   Serial.print("LATE probability: ");
   Serial.println(lateProbability, 4);
   Serial.print("Confidence: ");
@@ -164,7 +222,7 @@ void loop() {
   Serial.print(",\"humidity\":");
   Serial.print(humidity, 1);
   Serial.print(",\"prediction\":\"");
-  Serial.print(strcmp(prediction, "LATE") == 0 ? "Spoiled" : "Fresh");
+  Serial.print(stageLabel);
   Serial.print("\",\"probability_spoiled\":");
   Serial.print(lateProbability, 4);
   Serial.println("}");
@@ -191,6 +249,6 @@ void loop() {
   }
 #endif
 
-  // Sample interval: 2 seconds
-  delay(2000);
+  // Sample interval: 1.8 seconds (adjusted for beep delay)
+  delay(1800);
 }

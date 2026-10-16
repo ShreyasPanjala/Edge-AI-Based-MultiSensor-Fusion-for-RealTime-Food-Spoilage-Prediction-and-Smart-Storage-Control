@@ -48,32 +48,50 @@ const state = {
 
 // Web Audio API Synthesizer for ESP32 Active Buzzer Beep
 let audioCtx = null;
-function playAlarmBeep() {
+
+function playWarningPip() {
+  // Moderate short pip for Medium Spoiled (Climacteric Transition)
   if (state.audioMuted) return;
   try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz warning pitch
-    osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 pitch
 
-    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
 
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-
     osc.start();
-    osc.stop(audioCtx.currentTime + 0.25);
-  } catch (e) {
-    // AudioContext permission guard
-  }
+    osc.stop(audioCtx.currentTime + 0.12);
+  } catch (e) {}
+}
+
+function playCriticalAlarm() {
+  // Urgent rapid siren for Full Spoiled
+  if (state.audioMuted) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz to 1760Hz
+    osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.16);
+
+    gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.22);
+  } catch (e) {}
 }
 
 // DOM Elements
@@ -289,12 +307,21 @@ function updateUIWithPrediction(data) {
 
   if (prediction === 'Fresh') {
     elements.conditionIcon.textContent = '🌿';
+    // Fresh: Completely silent! Zero buzzer beeping.
   } else if (prediction === 'Warning') {
     elements.conditionIcon.textContent = '⚠️';
+    // Medium Spoiled: Polite warning pip
+    if (state.lastAlertState !== 'Warning') {
+      playWarningPip();
+    }
   } else {
     elements.conditionIcon.textContent = '☣️';
-    playAlarmBeep(); // Trigger acoustic warning beacon
+    // Full Spoiled: Urgent critical alarm
+    if (state.lastAlertState !== 'Spoiled') {
+      playCriticalAlarm();
+    }
   }
+  state.lastAlertState = prediction;
 
   // 2. Metrics & Probability Bar
   const probPercent = (probability_spoiled * 100).toFixed(2);
