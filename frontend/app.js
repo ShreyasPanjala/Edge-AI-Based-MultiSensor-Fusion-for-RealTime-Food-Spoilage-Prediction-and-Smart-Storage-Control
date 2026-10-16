@@ -738,6 +738,44 @@ elements.toggleStreamingBtn.addEventListener('click', () => {
 });
 
 // ============================================================================
+// Toast Notification System
+// ============================================================================
+function showToast(title, msg = '', type = 'info', duration = 5000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) {
+    console.log(`[TOAST ${type.toUpperCase()}] ${title}: ${msg}`);
+    return;
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${type}`;
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️',
+  };
+
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[type] || '🔔'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+    </div>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast-hiding');
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 350);
+  }, duration);
+}
+
+// ============================================================================
 // Web Serial Direct USB Hardware Ingestion
 // ============================================================================
 let webSerialPort = null;
@@ -746,29 +784,41 @@ let webSerialKeepReading = false;
 
 async function connectWebSerial() {
   if (!('serial' in navigator)) {
-    alert('Web Serial is supported in Google Chrome or Microsoft Edge. Alternatively, run:\npython serial_bridge.py');
+    showToast(
+      'Web Serial Not Supported',
+      'Please open in Google Chrome or Microsoft Edge on http://localhost:8000. Alternatively, open a terminal and run:\npython serial_bridge.py',
+      'warning',
+      8000
+    );
     return;
   }
 
   if (webSerialPort) {
-    // Disconnect
+    // Disconnect cleanly
     webSerialKeepReading = false;
     try {
-      if (webSerialReader) await webSerialReader.cancel();
-      await webSerialPort.close();
+      if (webSerialReader) {
+        await webSerialReader.cancel().catch(() => {});
+        webSerialReader.releaseLock();
+      }
+      await webSerialPort.close().catch(() => {});
     } catch (e) {
       console.warn('Error during serial close:', e);
     }
+    webSerialReader = null;
     webSerialPort = null;
     elements.connectSerialBtn.innerHTML = '<span>🔌 Connect USB ESP32</span>';
     elements.connectSerialBtn.className = 'btn-primary';
     elements.edgeStatusText.textContent = 'STANDBY';
     elements.edgeStatusPill.querySelector('.pill-dot').className = 'pill-dot cyan pulse';
+    showToast('ESP32 Disconnected', 'Browser USB serial connection closed.', 'info', 4000);
     showIngestStatus('ESP32 Disconnected', 'var(--text-muted)');
     return;
   }
 
   try {
+    showToast('Select ESP32 Device', 'Click your ESP32 (CP210x / CH340 / USB Serial) in the browser popup...', 'info', 6000);
+
     webSerialPort = await navigator.serial.requestPort();
     await webSerialPort.open({ baudRate: 115200 });
 
@@ -776,13 +826,13 @@ async function connectWebSerial() {
     elements.connectSerialBtn.className = 'btn-secondary active';
     elements.edgeStatusText.textContent = 'HARDWARE LIVE';
     elements.edgeStatusPill.querySelector('.pill-dot').className = 'pill-dot green pulse';
+    showToast('Hardware Live!', 'Successfully connected to ESP32 at 115200 baud. Ingesting stream...', 'success', 5000);
     showIngestStatus('ESP32 Hardware Connected via USB!', 'var(--emerald-primary)');
 
     webSerialKeepReading = true;
-    const textDecoder = new TextDecoderStream();
-    webSerialPort.readable.pipeTo(textDecoder.writable);
-    const reader = textDecoder.readable.getReader();
+    const reader = webSerialPort.readable.getReader();
     webSerialReader = reader;
+    const decoder = new TextDecoder();
 
     let lineBuffer = '';
     let currentReading = { mq135: null, temperature: null, humidity: null };
@@ -790,60 +840,84 @@ async function connectWebSerial() {
     while (webSerialKeepReading) {
       const { value, done } = await reader.read();
       if (done) break;
-      lineBuffer += value;
-      const lines = lineBuffer.split('\n');
-      lineBuffer = lines.pop();
+      if (value) {
+        lineBuffer += decoder.decode(value, { stream: true });
+        const lines = lineBuffer.split('\n');
+        lineBuffer = lines.pop(); // keep residual partial line
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
 
-        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            if (parsed.mq135 !== undefined) {
+          // 1. JSON Telemetry Format
+          if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            try {
+              const parsed = JSON.parse(trimmed);
+              if (parsed.mq135 !== undefined) {
+                const payload = {
+                  mq135: parseFloat(parsed.mq135),
+                  temperature: parseFloat(parsed.temperature || 25.0),
+                  humidity: parseFloat(parsed.humidity || 65.0),
+                };
+                await ingestTelemetry(payload);
+              }
+            } catch(e) {}
+            continue;
+          }
+
+          // 2. Human-Readable Key-Value Telemetry Format
+          if (trimmed.startsWith('MQ135:')) {
+            const val = parseFloat(trimmed.replace('MQ135:', '').trim());
+            if (!isNaN(val)) currentReading.mq135 = val;
+          } else if (trimmed.startsWith('Temperature:')) {
+            const val = parseFloat(trimmed.replace('Temperature:', '').trim());
+            if (!isNaN(val)) currentReading.temperature = val;
+          } else if (trimmed.startsWith('Humidity:')) {
+            const val = parseFloat(trimmed.replace('Humidity:', '').trim());
+            if (!isNaN(val)) currentReading.humidity = val;
+          } else if (trimmed === '---' || trimmed.startsWith('===') || trimmed.startsWith('Prediction:')) {
+            if (currentReading.mq135 !== null) {
               const payload = {
-                mq135: parseFloat(parsed.mq135),
-                temperature: parseFloat(parsed.temperature || 25.0),
-                humidity: parseFloat(parsed.humidity || 65.0),
+                mq135: currentReading.mq135,
+                temperature: currentReading.temperature !== null ? currentReading.temperature : 25.0,
+                humidity: currentReading.humidity !== null ? currentReading.humidity : 65.0,
               };
               await ingestTelemetry(payload);
+              currentReading = { mq135: null, temperature: null, humidity: null };
             }
-          } catch(e) {}
-          continue;
-        }
-
-        if (trimmed.startsWith('MQ135:')) {
-          const val = parseFloat(trimmed.replace('MQ135:', '').trim());
-          if (!isNaN(val)) currentReading.mq135 = val;
-        } else if (trimmed.startsWith('Temperature:')) {
-          const val = parseFloat(trimmed.replace('Temperature:', '').trim());
-          if (!isNaN(val)) currentReading.temperature = val;
-        } else if (trimmed.startsWith('Humidity:')) {
-          const val = parseFloat(trimmed.replace('Humidity:', '').trim());
-          if (!isNaN(val)) currentReading.humidity = val;
-        } else if (trimmed === '---' || trimmed.startsWith('===') || trimmed.startsWith('Prediction:')) {
-          if (currentReading.mq135 !== null) {
-            const payload = {
-              mq135: currentReading.mq135,
-              temperature: currentReading.temperature !== null ? currentReading.temperature : 25.0,
-              humidity: currentReading.humidity !== null ? currentReading.humidity : 65.0,
-            };
-            await ingestTelemetry(payload);
-            currentReading = { mq135: null, temperature: null, humidity: null };
           }
         }
       }
     }
   } catch (err) {
     console.error('Serial Error:', err);
-    showIngestStatus(`Serial: ${err.message}`, 'var(--crimson-primary)');
+    if (webSerialReader) {
+      try {
+        await webSerialReader.cancel().catch(() => {});
+        webSerialReader.releaseLock();
+      } catch(e) {}
+      webSerialReader = null;
+    }
     if (webSerialPort) {
-      try { await webSerialPort.close(); } catch(e) {}
+      try { await webSerialPort.close().catch(() => {}); } catch(e) {}
       webSerialPort = null;
     }
     elements.connectSerialBtn.innerHTML = '<span>🔌 Connect USB ESP32</span>';
     elements.connectSerialBtn.className = 'btn-primary';
+
+    if (err.name === 'NotFoundError') {
+      showToast('Connection Cancelled', 'No device selected in the popup. Make sure your USB cable is plugged in.', 'warning', 5000);
+    } else if (err.name === 'NetworkError' || (err.message && err.message.toLowerCase().includes('open'))) {
+      showToast(
+        '⚠️ COM Port Busy!',
+        'Close the Arduino IDE Serial Monitor or any running serial_bridge.py, then click Connect again.',
+        'error',
+        9000
+      );
+    } else {
+      showToast('Serial Connection Error', err.message || 'Unable to open serial port', 'error', 6000);
+    }
+    showIngestStatus(`Serial: ${err.message}`, 'var(--crimson-primary)');
   }
 }
 
@@ -925,13 +999,14 @@ async function initializeApp() {
   await fetchLatestReading();
   await fetchHistory();
 
-  // Background polling every 2.5s
+  // Background polling every 2.0s: Automatically syncs data pushed by serial_bridge or hardware
   state.pollIntervalId = setInterval(async () => {
-    if (!state.isStreaming) {
+    if (!state.isStreaming && !webSerialPort) {
       await fetchHealth();
+      await fetchLatestReading();
       await fetchHistory();
     }
-  }, 2500);
+  }, 2000);
 }
 
 // Kick off when DOM is ready

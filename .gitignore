@@ -13,6 +13,8 @@ env/
 *.zip
 !esp32_fruit_freshness.zip
 !frontend/esp32_fruit_freshness.zip
+!fruit_freshness_full_project.zip
+!frontend/fruit_freshness_full_project.zip
 
 # Environment variables & secrets
 .env
